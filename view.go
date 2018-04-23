@@ -72,6 +72,9 @@ type View struct {
 	// If Frame is true, Title allows to configure a title for the view.
 	Title string
 
+	// If Frame is true, Footer allows to configure a footer for the view.
+	Footer string
+
 	// If Mask is true, the View will display the mask instead of the real
 	// content
 	Mask rune
