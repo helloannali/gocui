@@ -509,9 +509,15 @@ func (g *Gui) drawFrameEdges(v *View, fgColor, bgColor Attribute) error {
 
 // drawFrameCorners draws the corners of the view.
 func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
-	runeTL, runeTR, runeBL, runeBR := '┌', '┐', '└', '┘'
-	if g.ASCII {
+	var runeTL, runeTR, runeBL, runeBR rune
+	switch {
+	case g.ASCII:
 		runeTL, runeTR, runeBL, runeBR = '+', '+', '+', '+'
+	case v.Rounded:
+		runeTL, runeTR, runeBL, runeBR = '╭', '╮', '╰', '╯'
+	default:
+		runeTL, runeTR, runeBL, runeBR = '┌', '┐', '└', '┘'
+
 	}
 
 	corners := []struct {

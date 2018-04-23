@@ -56,6 +56,10 @@ type View struct {
 	// If Frame is true, a border will be drawn around the view.
 	Frame bool
 
+	// If Frame is true, the border corners will be rounded instead of
+	// squared.
+	Rounded bool
+
 	// If Wrap is true, the content that is written to this View is
 	// automatically wrapped when it is longer than its width. If true the
 	// view's x-origin will be ignored.
