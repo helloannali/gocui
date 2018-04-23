@@ -40,6 +40,7 @@ type Gui struct {
 	keybindings []*keybinding
 	maxX, maxY  int
 	outputMode  OutputMode
+	ei          *escapeInterpreter
 
 	// BgColor and FgColor allow to configure the background and foreground
 	// colors of the GUI.
@@ -77,6 +78,7 @@ func NewGui(mode OutputMode) (*Gui, error) {
 	g := &Gui{}
 
 	g.outputMode = mode
+	g.ei = newEscapeInterpreter(mode)
 	termbox.SetOutputMode(termbox.OutputMode(mode))
 
 	g.tbEvents = make(chan termbox.Event, 20)
@@ -454,7 +456,7 @@ func (g *Gui) flush() error {
 				return err
 			}
 			if v.Title != "" {
-				if err := g.drawTitle(v, fgColor, bgColor); err != nil {
+				if err := g.drawTitle(v); err != nil {
 					return err
 				}
 			}
@@ -541,43 +543,87 @@ func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 }
 
 // drawTitle draws the title of the view.
-func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
+func (g *Gui) drawTitle(v *View) error {
 	if v.y0 < 0 || v.y0 >= g.maxY {
 		return nil
 	}
 
-	for i, ch := range v.Title {
+	var i int
+	for _, ch := range []rune(v.Title) {
 		x := v.x0 + i + 2
 		if x < 0 {
 			continue
 		} else if x > v.x1-2 || x >= g.maxX {
 			break
 		}
-		if err := g.SetRune(x, v.y0, ch, fgColor, bgColor); err != nil {
-			return err
+
+		for j, c := range g.parseInput(ch) {
+			if err := g.SetRune(x+j, v.y0, c.chr, c.fgColor, c.bgColor); err != nil {
+				return err
+			}
+			i++
 		}
 	}
+	g.ei.reset()
 	return nil
 }
 
 // drawFooter draws the footer of the view.
-func (g *Gui) drawFooter(v *View, fgColor, bgColor Attribute) error {
+func (g *Gui) drawFooter(v *View, bgColor, fgColor Attribute) error {
 	if v.y0 < 0 || v.y0 >= g.maxY {
 		return nil
 	}
 
-	for i, ch := range v.Footer {
+	var i int
+	for _, ch := range []rune(v.Footer) {
 		x := v.x0 + i + 2
 		if x < 0 {
 			continue
 		} else if x > v.x1-2 || x >= g.maxX {
 			break
 		}
-		if err := g.SetRune(x, v.y1, ch, fgColor, bgColor); err != nil {
-			return err
+
+		for j, c := range g.parseInput(ch) {
+			if err := g.SetRune(x+j, v.y1, c.chr, c.fgColor, c.bgColor); err != nil {
+				return err
+			}
+			i++
 		}
 	}
+	g.ei.reset()
 	return nil
+}
+
+// parseInput parses char by char the title and footer. It returns nil
+// while processing ESC sequences. Otherwise, it returns a cell slice that
+// contains the processed data.
+func (g *Gui) parseInput(ch rune) []cell {
+	cells := []cell{}
+
+	isEscape, err := g.ei.parseOne(ch)
+	if err != nil {
+		for _, r := range g.ei.runes() {
+			c := cell{
+				fgColor: g.FgColor,
+				bgColor: g.BgColor,
+				chr:     r,
+			}
+			cells = append(cells, c)
+		}
+		g.ei.reset()
+	} else {
+		if isEscape {
+			return nil
+		}
+		c := cell{
+			fgColor: g.ei.curFgColor,
+			bgColor: g.ei.curBgColor,
+			chr:     ch,
+		}
+		cells = append(cells, c)
+	}
+
+	return cells
 }
 
 // draw manages the cursor and calls the draw function of a view.
