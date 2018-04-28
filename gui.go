@@ -570,7 +570,7 @@ func (g *Gui) drawTitle(v *View) error {
 
 // drawFooter draws the footer of the view.
 func (g *Gui) drawFooter(v *View, bgColor, fgColor Attribute) error {
-	if v.y0 < 0 || v.y0 >= g.maxY {
+	if v.y0 < 0 || v.y1 >= g.maxY {
 		return nil
 	}
 
