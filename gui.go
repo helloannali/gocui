@@ -456,7 +456,7 @@ func (g *Gui) flush() error {
 				return err
 			}
 			if v.Title != "" {
-				if err := g.drawTitle(v); err != nil {
+				if err := g.drawTitle(v, fgColor, bgColor); err != nil {
 					return err
 				}
 			}
@@ -543,7 +543,7 @@ func (g *Gui) drawFrameCorners(v *View, fgColor, bgColor Attribute) error {
 }
 
 // drawTitle draws the title of the view.
-func (g *Gui) drawTitle(v *View) error {
+func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
 	if v.y0 < 0 || v.y0 >= g.maxY {
 		return nil
 	}
@@ -558,7 +558,13 @@ func (g *Gui) drawTitle(v *View) error {
 		}
 
 		for j, c := range g.parseInput(ch) {
-			if err := g.SetRune(x+j, v.y0, c.chr, c.fgColor, c.bgColor); err != nil {
+			if c.fgColor != ColorDefault {
+				fgColor = c.fgColor
+			}
+			if c.bgColor != ColorDefault {
+				bgColor = c.bgColor
+			}
+			if err := g.SetRune(x+j, v.y0, c.chr, fgColor, bgColor); err != nil {
 				return err
 			}
 			i++
@@ -569,7 +575,7 @@ func (g *Gui) drawTitle(v *View) error {
 }
 
 // drawFooter draws the footer of the view.
-func (g *Gui) drawFooter(v *View, bgColor, fgColor Attribute) error {
+func (g *Gui) drawFooter(v *View, fgColor, bgColor Attribute) error {
 	if v.y0 < 0 || v.y1 >= g.maxY {
 		return nil
 	}
@@ -584,7 +590,13 @@ func (g *Gui) drawFooter(v *View, bgColor, fgColor Attribute) error {
 		}
 
 		for j, c := range g.parseInput(ch) {
-			if err := g.SetRune(x+j, v.y1, c.chr, c.fgColor, c.bgColor); err != nil {
+			if c.fgColor != ColorDefault {
+				fgColor = c.fgColor
+			}
+			if c.bgColor != ColorDefault {
+				bgColor = c.bgColor
+			}
+			if err := g.SetRune(x+j, v.y1, c.chr, fgColor, bgColor); err != nil {
 				return err
 			}
 			i++
