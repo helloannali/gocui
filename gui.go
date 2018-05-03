@@ -439,31 +439,31 @@ func (g *Gui) flush() error {
 		}
 	}
 	for _, v := range g.views {
-		if v.Frame {
-			var fgColor, bgColor Attribute
-			if g.Highlight && v == g.currentView {
-				fgColor = g.SelFgColor
-				bgColor = g.SelBgColor
-			} else {
-				fgColor = g.FgColor
-				bgColor = g.BgColor
-			}
+		var fgColor, bgColor Attribute
+		if g.Highlight && v == g.currentView {
+			fgColor = g.SelFgColor
+			bgColor = g.SelBgColor
+		} else {
+			fgColor = g.FgColor
+			bgColor = g.BgColor
+		}
 
+		if v.Frame {
 			if err := g.drawFrameEdges(v, fgColor, bgColor); err != nil {
 				return err
 			}
 			if err := g.drawFrameCorners(v, fgColor, bgColor); err != nil {
 				return err
 			}
-			if v.Title != "" {
-				if err := g.drawTitle(v, fgColor, bgColor); err != nil {
-					return err
-				}
+		}
+		if v.Title != "" {
+			if err := g.drawTitle(v, fgColor, bgColor); err != nil {
+				return err
 			}
-			if v.Footer != "" {
-				if err := g.drawFooter(v, fgColor, bgColor); err != nil {
-					return err
-				}
+		}
+		if v.Footer != "" {
+			if err := g.drawFooter(v, fgColor, bgColor); err != nil {
+				return err
 			}
 		}
 		if err := g.draw(v); err != nil {
@@ -558,13 +558,13 @@ func (g *Gui) drawTitle(v *View, fgColor, bgColor Attribute) error {
 		}
 
 		for j, c := range g.parseInput(ch) {
-			if c.fgColor != ColorDefault {
-				fgColor = c.fgColor
+			if c.fgColor == ColorDefault {
+				c.fgColor = fgColor
 			}
-			if c.bgColor != ColorDefault {
-				bgColor = c.bgColor
+			if c.bgColor == ColorDefault {
+				c.bgColor = bgColor
 			}
-			if err := g.SetRune(x+j, v.y0, c.chr, fgColor, bgColor); err != nil {
+			if err := g.SetRune(x+j, v.y0, c.chr, c.fgColor, c.bgColor); err != nil {
 				return err
 			}
 			i++
